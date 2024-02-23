@@ -18,6 +18,7 @@
     <ProjectReference Include="..\SystemAuthenticator.Core\SystemAuthenticator.Core.csproj" />
     <ProjectReference Include="..\SystemAuthenticator.Domain\SystemAuthenticator.Domain.csproj" />
     <ProjectReference Include="..\SystemAuthenticator.Infra.Data\SystemAuthenticator.Infra.Data.csproj" />
+    <ProjectReference Include="..\SystemAuthenticator.Infra.Helpers\SystemAuthenticator.Infra.Helpers.csproj" />
   </ItemGroup>
 
 </Project>

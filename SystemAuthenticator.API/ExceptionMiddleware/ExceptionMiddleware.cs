@@ -17,7 +17,7 @@ public class ExceptionMiddleware : IExceptionFilter
             _ => HttpStatusCode.InternalServerError
         };
 
-        NotificationResultDto<string> apiResponse = new NotificationResultDto<string>(false, context.Exception.Message, null);
+        NotificationResultDto<string> apiResponse = new NotificationResultDto<string>(false, context.Exception.Message, string.Empty, statusCode, null);
 
 
         context.Result = new JsonResult(apiResponse) { StatusCode = (int)statusCode };

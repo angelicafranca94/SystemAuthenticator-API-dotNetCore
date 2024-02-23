@@ -1,67 +1,86 @@
-﻿using SystemAuthenticator.Core.DTOs;
+﻿using System.Net;
+using SystemAuthenticator.Core.DTOs;
+using SystemAuthenticator.Core.Interfaces.Factories;
 using SystemAuthenticator.Core.Interfaces.Mapper;
 using SystemAuthenticator.Core.Interfaces.Services;
+using SystemAuthenticator.Core.Interfaces.Utils;
 using SystemAuthenticator.Domain.Interfaces;
+using SystemAuthenticator.Infra.Helpers.Constants;
 
 namespace SystemAuthenticator.Core.Services;
+
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly IVerifierService<UserDto> _verifierService;
+    private readonly IGenerateResponseUtil _generateResponseUtil;
+    private readonly IVerifierFactory _verifierFactory;
+    private readonly IGenerateHashAndSaltFactory _generateHashAndSaltFactory;
 
-    public UserService(IUserRepository userRepository, IMapper mapper, IVerifierService<UserDto> verifierService
-        )
+    public UserService(IUserRepository userRepository, IMapper mapper, IGenerateResponseUtil generateResponseUtil,
+    IVerifierFactory verifierFactory, IGenerateHashAndSaltFactory generateHashAndSaltFactory)
     {
         _userRepository = userRepository;
         _mapper = mapper;
-        _verifierService = verifierService;
+        _generateResponseUtil = generateResponseUtil;
+        _verifierFactory = verifierFactory;
+        _generateHashAndSaltFactory = generateHashAndSaltFactory;
     }
 
-    public async Task<NotificationResultDto<UserDto>> AddAsync(UserDto user)
+    public async Task<NotificationResultDto<UserDto>> AddAsync(UserDto userDto)
     {
-       var verify =  _verifierService.Execute(user);
+        var verifierService = _verifierFactory.Create<UserDto>();
 
+        var verify = verifierService.Execute(userDto);
         if (!verify.Success) return verify;
 
-        var userEntity = await _userRepository.AddAsync(_mapper.MapToUserEntity(user));
+        var userEntity = await _userRepository.GetByEmailAsync(userDto.Email);
 
-        return new NotificationResultDto<UserDto>(true, "Success", _mapper.MapToUserDto(userEntity));
+        if (userEntity is not null) return new NotificationResultDto<UserDto>(false, NotificationsConstants.UserAlreadyRegistered, string.Empty, HttpStatusCode.BadRequest, null);
+
+        userEntity = _generateHashAndSaltFactory.GenerateHashAndSalt(userDto);
+
+        var userNew = await _userRepository.AddAsync(userEntity);
+
+        return _generateResponseUtil.GenerateResponse<UserDto>(_mapper.MapToUserDto(userNew));
     }
 
-    public Task<bool> Exists(Guid id)
+    public async Task<IEnumerable<NotificationResultDto<UserDto>>> GetAllAsync()
+    {
+        var usersEntity = await _userRepository.GetAllAsync();
+        
+        var usersDto = _mapper.MapToUserDto(usersEntity);
+
+        return usersDto.Select(user => _generateResponseUtil.GenerateResponse(user));
+    }
+
+    public Task<UserDto> GetByEmailAsync(string email)
     {
         throw new NotImplementedException();
     }
 
-    public Task<bool> Exists(string email)
+    public async Task<NotificationResultDto<UserDto>> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        var userentity = await _userRepository.GetByIdAsync(id);
+
+        return _generateResponseUtil.GenerateResponse<UserDto>(_mapper.MapToUserDto(userentity));
     }
 
-    public Task<IEnumerable<UserDto>> GetAll()
+    public async Task RemoveAsync(int id)
     {
-        throw new NotImplementedException();
+        await _userRepository.RemoveAsync(id);
     }
 
-    public Task<UserDto> GetByEmail(string email)
+    public async Task<NotificationResultDto<UserDto>> UpdateAsync(UserDto userDto)
     {
-        throw new NotImplementedException();
-    }
+        var verifierService = _verifierFactory.Create<UserDto>();
 
-    public Task<UserDto> GetById(Guid id)
-    {
-        throw new NotImplementedException();
-    }
+        var verify = verifierService.Execute(userDto);
+        if (!verify.Success) return verify;
 
-    public Task Remove(Guid id)
-    {
-        throw new NotImplementedException();
-    }
+        var userentity = await _userRepository.Update(_mapper.MapToUserEntity(userDto));
 
-    public async Task Update(UserDto user)
-    {
-        await _userRepository.Update(_mapper.MapToUserEntity(user));
+        return _generateResponseUtil.GenerateResponse<UserDto>(_mapper.MapToUserDto(userentity));
     }
 
 

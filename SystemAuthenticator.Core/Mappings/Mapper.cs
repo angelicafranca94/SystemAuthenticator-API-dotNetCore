@@ -18,6 +18,8 @@ public class Mapper : IMapper
         };
     }
 
+
+
     public UserDto MapToUserDto(UserEntity userEntity)
     {
         return new UserDto
@@ -26,5 +28,19 @@ public class Mapper : IMapper
             Name = userEntity.Name,
             Email = userEntity.Email
         };
+    }
+
+
+    public IEnumerable<UserDto> MapToUserDto(IEnumerable<UserEntity> userEntity)
+    {
+        foreach (var user in userEntity)
+        {
+            yield return new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email
+            };
+        }
     }
 }

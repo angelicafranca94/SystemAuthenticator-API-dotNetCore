@@ -5,8 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Text;
+using SystemAuthenticator.Core.Factories;
+using SystemAuthenticator.Core.Interfaces.Factories;
 using SystemAuthenticator.Core.Interfaces.Mapper;
 using SystemAuthenticator.Core.Interfaces.Services;
+using SystemAuthenticator.Core.Interfaces.Utils;
 using SystemAuthenticator.Core.Mappings;
 using SystemAuthenticator.Core.Services;
 using SystemAuthenticator.Domain.Account;
@@ -15,6 +18,7 @@ using SystemAuthenticator.Infra.Data.Identity;
 using SystemAuthenticator.Infra.Data.Repositories;
 using SystemAuthenticator.Infra.Ioc.DependencyInjections.Extensions;
 using SystemAuthenticator.Infra.Ioc.Settings;
+using SystemAuthenticator.Infra.Ioc.Utils;
 
 namespace SystemAuthenticator.Infra.Ioc.DependencyInjections;
 public static class DependencyInjection
@@ -51,12 +55,20 @@ public static class DependencyInjection
         //Repositories
         services.AddScoped<IUserRepository, UserRepository>();
 
+        //Factories
+        services.AddScoped<IVerifierFactory, VerifierFactory>();
+        services.AddScoped<IGenerateHashAndSaltFactory, GenerateHashAndSaltFactory>();
+
         //Services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthenticate, AuthenticateService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         //Verifier
-        services.AddScoped(typeof(IVerifierService<>), typeof(VerifierService<>));
+        services.AddScoped(typeof(IVerifierNotificationUtil<>), typeof(VerifierNotificationUtil<>));
+
+        //Utils
+        services.AddScoped<IGenerateResponseUtil, GenerateResponseUtil>();
 
         //Settings
         services.AddBindedSettings<ConnectionStringsSettings>();

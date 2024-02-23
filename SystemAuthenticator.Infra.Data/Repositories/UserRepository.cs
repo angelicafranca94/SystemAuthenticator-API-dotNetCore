@@ -21,44 +21,45 @@ public class UserRepository : IUserRepository
             user.Name,
             user.Email,
             user.PasswordHash,
-            user.PasswordSalt
+            user.PasswordSalt,
+            user.IsAdmin,
         };
 
-       return await _db.QuerySingleAsync<UserEntity>(UserQueryBuilder.Insert, parameters);
+        return await _db.QuerySingleAsync<UserEntity>(UserQueryBuilder.Insert, parameters);
     }
 
-    public Task<bool> Exists(Guid id)
+    public Task<IEnumerable<UserEntity>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return _db.QueryAsync<UserEntity>(UserQueryBuilder.GetAll);
     }
 
-    public Task<bool> Exists(string email)
+    public async Task<UserEntity> GetByEmailAsync(string email)
     {
-        throw new NotImplementedException();
+        return await _db.QueryFirstOrDefaultAsync<UserEntity>(UserQueryBuilder.GetByEmail, new { Email = email });
     }
 
-    public Task<IEnumerable<UserEntity>> GetAll()
+    public async Task<UserEntity> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        return await _db.QueryFirstOrDefaultAsync<UserEntity>(UserQueryBuilder.GetById, new { Id = id });
     }
 
-    public Task<UserEntity> GetByEmail(string email)
+    public async Task RemoveAsync(int id)
     {
-        throw new NotImplementedException();
+        await _db.ExecuteAsync(UserQueryBuilder.Delete, new { Id = id });
     }
 
-    public Task<UserEntity> GetById(Guid id)
+    public async Task<UserEntity> Update(UserEntity user)
     {
-        throw new NotImplementedException();
-    }
+        var parameters = new
+        {
+            user.Id,
+            user.Name,
+            user.Email,
+            user.PasswordHash,
+            user.PasswordSalt,
+            user.IsAdmin,
+        };
 
-    public Task Remove(Guid id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Update(UserEntity user)
-    {
-        throw new NotImplementedException();
+        return await _db.QuerySingleAsync<UserEntity>(UserQueryBuilder.Update, parameters);
     }
 }
