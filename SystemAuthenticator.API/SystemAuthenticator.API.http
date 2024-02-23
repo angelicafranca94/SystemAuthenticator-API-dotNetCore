@@ -1,0 +1,6 @@
+@SystemAuthenticator.API_HostAddress = http://localhost:5209
+
+GET {{SystemAuthenticator.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
